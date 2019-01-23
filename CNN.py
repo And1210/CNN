@@ -10,8 +10,8 @@ for i in range(60000):
     trainingIndexArray = correctNumbersIndex.trainY[i] # the index position of the correct number for the 60 000 training images
 for i in range(10000):
     testingImagesArray = data.testX[i] #the 10 000 testing images
-    testingImagesArray = np.array(testingImagesArray,ndmin=2)
-    testingIndexArray = correctNumbersIndex.testY[i]
+    testingImagesArray = np.array(testingImagesArray,ndmin=2) #scaling the array so it has 2 dimensions
+    testingIndexArray = correctNumbersIndex.testY[i] #the index position of the correct number for the 10 000 testing images
 
 
 class Filter:
