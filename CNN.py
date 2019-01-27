@@ -1,18 +1,4 @@
 import numpy as np
-import mnistdb.io as mio
-
-correctNumbers = mio.load() # array with the correct number
-data = mio.load(scaled=True) #the data of the images
-correctNumbersIndex = mio.load(one_hot=True) #array with a 1 at the index position of the correct number
-for i in range(60000):
-    trainingImagesArray = data.trainX[i] #the 60 000 training images
-    trainingImagesArray = np.array(trainingImagesArray,ndmin=2) #scaling the array so it has 2 dimensions
-    trainingIndexArray = correctNumbersIndex.trainY[i] # the index position of the correct number for the 60 000 training images
-for i in range(10000):
-    testingImagesArray = data.testX[i] #the 10 000 testing images
-    testingImagesArray = np.array(testingImagesArray,ndmin=2) #scaling the array so it has 2 dimensions
-    testingIndexArray = correctNumbersIndex.testY[i] #the index position of the correct number for the 10 000 testing images
-
 
 class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
@@ -25,6 +11,18 @@ class Filter:
         #this is where the filter is convoluted over the entire input image
         #should produce a new image with features highlighted
         pass
+    
+    #a convoluted image has the relu function applied to it
+    def relu(self, image):
+        for r in numpy.arange(0,image[0]):  
+            for c in numpy.arange(0, image[1]):
+                if image[r, c] > 0:
+                    image[r, c] = image[r, c]
+                else:
+                    image[r, c] = 0
+        return image
+    def maxPool(self, image, size, stride):
+        
         
 #Convolution layer
 class ConvLayer:
@@ -50,11 +48,14 @@ class ConvLayer:
             #Convolute old image with filter
             newImg = self.filters[i].convolute(images[i])
             #Apply activation function (ReLU)
-            
+            newImg = relu(newImg)
             #Pooling
-            
+            newImg = maxPool(newImg)
+            #pushing th
             output.push(newImg)
         return output
+
+    def backpropagation
         
 class CNN:
     #inputSize - tuple of the width and height of input image
@@ -72,6 +73,9 @@ class CNN:
         return self.learningRate
         
     def feedForward(self, inputData):
-        pass
+        layerOuput = compute(inputData)
+        return layerOutput
+        
     def train(self, inputData, expectedOutput):
+
         pass
