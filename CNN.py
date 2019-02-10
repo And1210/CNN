@@ -28,8 +28,8 @@ class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
     #***filter size must be odd***
     def __init__(self, filterSize):
-    	if(filterSize%2 == 0):
-    		raise Exception("filterSize [the only parameter to Filter.__init__()] must be odd")
+        if(filterSize%2 == 0):
+            raise Exception("filterSize [the only parameter to Filter.__init__()] must be odd")
             
         self.values = np.random.uniform(low=-1, high=1, size=(filterSize, filterSize))
         self.size = filterSize
@@ -151,6 +151,7 @@ class CNN:
             self.layerOut[index] = curData
             index = index + 1
         curData = np.array(curData).flatten()
+        curData = curData.reshape(curData.shape[0], 1)
         self.flattenOut = curData
         probabilities = self.finalLayer.compute(curData)
         return probabilities
