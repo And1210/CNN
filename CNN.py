@@ -13,7 +13,19 @@ for i in range(10000):
     testingImagesArray = data.testX[i] #the 10 000 testing images
     testingImagesArray = np.array(testingImagesArray,ndmin=2) #scaling the array so it has 2 dimensions
     testingIndexArray = correctNumbersIndex.testY[i] #the index position of the correct number for the 10 000 testing images
-
+#relu activation function
+def relu(self, image):
+    for r in numpy.arange(0,image[0]):  
+        for c in numpy.arange(0, image[1]):
+            if image[r, c] > 0:
+                image[r, c] = image[r, c]
+            else:
+                image[r, c] = 0
+    return image
+#max pooling function
+def maxPool(self, image, size):
+    skimage.measure.block_reduce(image, size, np.max)
+    return image
 
 class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
@@ -25,20 +37,6 @@ class Filter:
     def convolute(self, image):
         #this is where the filter is convoluted over the entire input image
         #should produce a new image with features highlighted
-
-    #relu activation function
-    def relu(self, image):
-        for r in numpy.arange(0,image[0]):  
-            for c in numpy.arange(0, image[1]):
-                if image[r, c] > 0:
-                    image[r, c] = image[r, c]
-                else:
-                    image[r, c] = 0
-        return image
-    #max pooling function
-    def maxPool(self, image, size):
-        skimage.measure.block_reduce(image, size, np.max)
-        return image
 
         pass
         
