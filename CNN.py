@@ -1,5 +1,6 @@
 import numpy as np
 import mnistdb.io as mio
+import skimage.measure
 
 correctNumbers = mio.load() # array with the correct number
 data = mio.load(scaled=True) #the data of the images
@@ -24,6 +25,21 @@ class Filter:
     def convolute(self, image):
         #this is where the filter is convoluted over the entire input image
         #should produce a new image with features highlighted
+
+    #relu activation function
+    def relu(self, image):
+        for r in numpy.arange(0,image[0]):  
+            for c in numpy.arange(0, image[1]):
+                if image[r, c] > 0:
+                    image[r, c] = image[r, c]
+                else:
+                    image[r, c] = 0
+        return image
+    #max pooling function
+    def maxPool(self, image, size):
+        skimage.measure.block_reduce(image, size, np.max)
+        return image
+
         pass
         
 #Convolution layer
@@ -50,9 +66,9 @@ class ConvLayer:
             #Convolute old image with filter
             newImg = self.filters[i].convolute(images[i])
             #Apply activation function (ReLU)
-            
+            newImg = relu(newImg)
             #Pooling
-            
+            newImg = maxPool(newImg)
             output.push(newImg)
         return output
 
