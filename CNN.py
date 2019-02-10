@@ -71,23 +71,60 @@ class ConvLayer:
             newImg = maxPool(newImg)
             output.push(newImg)
         return output
+
+#Each layer of the Neural Network has properties, those are stored here    
+class Layer:
+    #Layer constructor
+    #inputSize ----- the number of inputs (or neurons) from the previous layer
+    #selfSize ----- the number of neurons on this layer
+    def __init__(self, inputSize, selfSize):
+        self.weights = 2 * np.random.rand(selfSize, inputSize) - 1  #giving random weights to start
+        self.bias = 2 * np.random.rand(selfSize, 1) - 1 #giving random bias to start
+        
+    #Feeds an input vector through the layer to produce an output
+    #inputData ----- a 1D array or list of input values with same length as inputSize
+    def compute(self, inputData):
+        out = self.weights.dot(inputData)  #feeding the given inputs through the current layerout)
+        out = out + self.bias
+        out = 1 / (1 + np.exp(-out))    #sigmoid activation function
+        return out
         
 class CNN:
     #inputSize - tuple of the width and height of input image
     #hiddenLayers - list of number of neurons on each hidden layer
     #outputSize - the number of outputs (10 for mnist)
     #lr - the learning rate
-    def __init__(self, inputSize, hiddenLayers, outputSize, lr):
+    def __init__(self, inputSize, hiddenLayers, outputSize, lr=0.05):
         self.lr = lr
         self.layers = []
-        for neurons in hiddenLayers:
-            self.layers.push(ConvLayer(neurons, 3))
+        for neurons in hiddenLayers:    #Setting up the convolutional layers
+            self.layers.append(ConvLayer(neurons, 3))
+            
+#        flattenNum = int(inputSize[0]*inputSize[1]/(pow(4, len(hiddenLayers))))
+        testInput = np.zeros(inputSize) #getting the number of inputs for the flattened layer
+        for l in self.layers:
+            testInput = l.compute(testInput)
+        flattenNum = testInput.shape[0] * testInput.shape[1]
+        self.finalLayer = Layer(flattenNum, outputSize)
+        
     def setLearningRate(self, newRate):
         self.learningRate = newRate
     def getLearningRate(self):
         return self.learningRate
         
     def feedForward(self, inputData):
-        pass
+        curData = inputData
+        index = 0
+        for l in self.layers:
+            curData = l.compute(curData)
+            index = index + 1
+        probabilities = self.finalLayer.compute(curData)
+        return probabilities
+    
     def train(self, inputData, expectedOutput):
+#        curOutput = self.feedForward(inputData)
+#        cost = expectedOutput - curOutput
         pass
+
+a = np.zeros((100, 100))
+nn = CNN(a.shape, [2, 4], 2)
