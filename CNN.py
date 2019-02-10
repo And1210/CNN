@@ -30,9 +30,9 @@ class Filter:
     def __init__(self, filterSize):
     	if(filterSize%2 == 0):
     		raise Exception("filterSize [the only parameter to Filter.__init__()] must be odd")
-    	else:
-        	self.values = np.random.uniform(low=-1, high=1, size=(filterSize, filterSize))
-        	self.size = filterSize
+            
+        self.values = np.random.uniform(low=-1, high=1, size=(filterSize, filterSize))
+        self.size = filterSize
         
     #this function convolutes the filter over the given image
     #a is the filter b is the image under convolution
