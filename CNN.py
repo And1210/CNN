@@ -95,6 +95,8 @@ class CNN:
     def __init__(self, inputSize, hiddenLayers, outputSize, lr=0.05):
         self.lr = lr
         self.layers = []
+        self.layerOut = [None for i in range(hiddenLayers + 1)]
+        self.flattenOut = None
         for neurons in hiddenLayers:    #Setting up the convolutional layers
             self.layers.append(ConvLayer(neurons, 3))
             
@@ -115,14 +117,21 @@ class CNN:
         index = 0
         for l in self.layers:
             curData = l.compute(curData)
+            self.layerOut[index] = curData
             index = index + 1
+        curData = curData.flatten()
+        self.flattenOut = curData
         probabilities = self.finalLayer.compute(curData)
         return probabilities
     
     def train(self, inputData, expectedOutput):
-#        curOutput = self.feedForward(inputData)
-#        cost = expectedOutput - curOutput
-        pass
+        curOutput = self.feedForward(inputData)
+        cost = expectedOutput - curOutput
+        layerOutputs = [inputData] + self.layerOut
+        
+        gradient = self.lr * cost * curOutput * (1 - curOutput)
+#        for i in range(len(layerOutputs)):
+            
 
 a = np.zeros((100, 100))
 nn = CNN(a.shape, [2, 4], 2)
