@@ -39,8 +39,6 @@ class Filter:
     def maxPool(self, image, size):
         skimage.measure.block_reduce(image, size, np.max)
         return image
-
-        pass
         
 #Convolution layer
 class ConvLayer:
@@ -131,7 +129,11 @@ class CNN:
         cost = expectedOutput - curOutput
         layerOutputs = [inputData] + self.layerOut
         
+        #train the fully connected layer at the end
         gradient = self.lr * cost * curOutput * (1 - curOutput)
+        weightChange = gradient.dot(self.flattenOut.transpose())
+        self.finalLayer.weights = self.finalLayer.weights + weightChange
+        self.finalLayer.bias = self.finalLayer.bias + gradient
 #        for i in range(len(layerOutputs)):
             
 
