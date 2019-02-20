@@ -28,9 +28,11 @@ class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
     #***filter size must be odd***
     def __init__(self, filterSize):
+        #checks that the filterSize is odd, if not raise an exception
         if(filterSize%2 == 0):
             raise Exception("filterSize [the only parameter to Filter.__init__()] must be odd")
             
+        #this is the "kernel" of the Filter, it's initialized to random values
         self.values = np.random.uniform(low=-1, high=1, size=(filterSize, filterSize))
         self.size = filterSize
         
@@ -65,7 +67,9 @@ class Filter:
        						output[x][y] += a[x+shift-i][x+shift-j]*b[y+shift-i][x+shift-j]
        					except IndexError:
        						#if the kernel overlaps the edge of b, consider the value of b[y+shift-i][x+shift-j] to be zero
-       						output[x][y] += 0
+       						#output[x][y] += a[x+shift-i][x+shift-j]*0
+                            #the above line of code is commented since it would not change output[x][y] anyway
+                            
        			#"normalizes" the output
        			output[x][y] *= normalizationConstant
 
