@@ -21,13 +21,6 @@ def relu(image):
     out = image
     out[out<0] = 0
     return out
-
-def reluDerivative(image):
-    out = image
-    out[out<=0] = 0
-    out[out>0] = 1
-    return out
-
 #max pooling function. The max pooling operation takes the maximum value of a certain region of a given image. This function moves
 #a kernel across the given image and max pools the image within the region defined by the kernel. The kernel is just a 2 index array
 #that describes the length and width of the rectangular region being pooled. The kernel is moved accross the image and at each
@@ -106,9 +99,9 @@ class Filter:
        	shift = int((self.size-1)/2)
 
        	#x and y are the indices of convolution, ie, they're the indices of the cell that the current sum being calculated will end up
-       	for x in range(0, len(b)):
+       	for x in range(floor(self.size/2), len(b) - self.size + 1 + floor(self.size/2)):
        		#it is necessary that b is at least a rectangular matrix so that b[0] is the same length as b[q] for any index q
-       		for y in range(0, len(b[0])):
+       		for y in range(floor(self.size/2), len(b[0]) - self.size + 1 + floor(self.size/2)):
        			output[x][y] = 0
 
        			#these for loops iterate over the kernel and the corresponding indices in the image
@@ -239,24 +232,12 @@ class CNN:
         for i in range(len(self.layers)):
             curIndex = len(self.layers)-(i+1)
             curLayer = self.layers[curIndex]
-            prevImgs = self.layerOut[curIndex]
-            prevDerivative = [np.zeros(prevImgs[i].shape) for i in range(len(prevImgs))]
+            costFilters = [Filter(cost.shape[1]) for i in range(cost.shape[0])]
+            for i in range(costFilters):
+                costFilters[i].values = cost[i]
             
-            count = 0
-            #for every feature map:
-            for cur_kernal in range(len(cost)):
-                c = cost[cur_kernal]
-                for x in range(0, curLayer.filters[cur_kernal].shape[1]):
-                    for y in range(0, curLayer.filters[cur_kernal].shape[0]):
-                        for x_img in range(prevImgs[floor(count/2)].shape[1]):
-                            for y_img in range(prevImgs[floor(count/2)].shape[0]):
-                                #adjusting the kernal weights
-                                curLayer.filters[cur_kernal][x][y] = curLayer.filters[cur_kernal][x][y] + c[x_img][y_img]*reluDerivative(prevImgs[x_img][y_img])*(prevImgs[curLayer.filters[cur_kernal].shape[1]-1-x_img][curLayer.filters[cur_kernal].shape[0]-1-y_img])
-                                
-                for x_img in range(prevImgs[floor(count/2)].shape[1]):
-                    for y_img in range(prevImgs[floor(count/2)].shape[0]):
-                        #backpropagating the cost to the previous layer
-#                        cost[cur_kernal][x_img][y_img]*reluDerivative(prevImgs[x_img][y_img])
+            
+            
 
 a = np.zeros((100, 100))
 nn = CNN(a.shape, [2, 4], 2)
