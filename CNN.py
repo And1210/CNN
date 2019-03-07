@@ -137,6 +137,7 @@ class CNN:
             testInput = l.compute(testInput)
         flattenNum = len(testInput) * testInput[0].shape[0] * testInput[0].shape[1]
         self.finalLayer = Layer(flattenNum, outputSize)
+        self.finalConvShape = (len(testInput), testInput[0].shape[0], testInput[0].shape[1])
         
     def setLearningRate(self, newRate):
         self.learningRate = newRate
@@ -157,6 +158,15 @@ class CNN:
         return probabilities
     
     def train(self, inputData, expectedOutput):
+        #iterative step for backprop:
+        #ultimate goal is to calculate the change in values for every filter (or kernal)
+        #for first fully connected layer, do back prop as normal
+        #unflatten the resultant cost
+        #for each cnn step:
+        #   the cost function at each layer should be an image
+        #   create the change in filter weights with animation i saw
+        #   back propagate cost
+        
         curOutput = self.feedForward(inputData)
         cost = expectedOutput - curOutput
         layerOutputs = [inputData] + self.layerOut
@@ -166,9 +176,23 @@ class CNN:
         weightChange = gradient.dot(self.flattenOut.transpose())
         self.finalLayer.weights = self.finalLayer.weights + weightChange
         self.finalLayer.bias = self.finalLayer.bias + gradient
-#        for i in range(len(layerOutputs)):
+        cost = self.finalLayer.weights.transpose().dot(cost) 
+        
+        #unflatten current cost value
+        cost = cost.reshape(self.finalConvShape)
+        
+        #backpropagate through every layer
+        for i in range(len(self.layers)):
+            curIndex = len(self.layers)-(i+1)
+            curLayer = self.layers[curIndex]
+            costFilters = [Filter(cost.shape[1]) for i in range(cost.shape[0])]
+            for i in range(costFilters):
+                costFilters[i].values = cost[i]
+            
+            
             
 
 a = np.zeros((100, 100))
 nn = CNN(a.shape, [2, 4], 2)
 out = nn.feedForward(a)
+nn.train(a, np.array([[1],[0]]))
