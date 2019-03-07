@@ -1,6 +1,7 @@
 import numpy as np
 import mnistdb.io as mio
 import skimage.measure
+from math import ceil as ceiling
 
 correctNumbers = mio.load() # array with the correct number
 data = mio.load(scaled=True) #the data of the images
@@ -19,10 +20,55 @@ def relu(image):
     out = image
     out[out<0] = 0
     return out
-#max pooling function
-def maxPool(image, size):
-    skimage.measure.block_reduce(image, size, np.max)
-    return image
+#max pooling function. The max pooling operation takes the maximum value of a certain region of a given image. This function moves
+#a kernel across the given image and max pools the image within the region defined by the kernel. The kernel is just a 2 index array
+#that describes the length and width of the rectangular region being pooled. The kernel is moved accross the image and at each
+#interval the value produced by the pooling operation is moved into a separate array. The point of this is to reduce the size of the
+#size of the given image while still preserving most of the information it holds.
+def maxPool(image, kernel):
+
+    #width and height of the kernel
+    width = kernel[0]
+    height = kernel[1]
+
+    #these define the amount the kernel moves in each direction in between intervals. A lot of maxPooling functions allow for arbitrary
+    #movement so I've defined these as separate variables, however for our purposes a step size that is the same as the corresponding
+    #dimension of the kernel is used since we neither want to miss any cells in the image or overlap any.
+    hStep = kernel[0]
+    vStep = kernel[1]
+
+    #this array holds the results of the pooling operation at each interval, as the name suggests, it is what the function will output
+    output = []
+    #we have to take into account the possibility that the kernel will not evenly cover the image, ie, it's width and heigth might not
+    #evenly divide the width and height of the given image respectively. If this occurs, at some iterations the kernel will hang over
+    #the edge of the image. This is the reason for using ceiling() when initializing the output array below, we need it
+    #to always round up when calculating its dimensions since the iterations when the kernel hangs over the side need a place to put the
+    #result of the pooling operation.
+    for i in range(0, ceiling(len(image)/hStep)):
+        #[0] * ceiling(len(image[0])/vStep) is weird python notation for an array of zeroes of length ceiling(len(image[0])/vStep)
+        output.append([0] * ceiling(len(image[0])/vStep))
+
+    #this nested for loop iterates the kernel accross the image, maxPooling at each iteration and throwing the result in output
+    #i and j are the index in output the result will be put in. Note that when we index image with i and j.
+    for i in range(0, len(output)):
+        for j in range(0, len(output[0])):
+            #this array represents the values in image covered by the kernel in this iteration
+            kernelCover = []
+            #these nested for loops append all the values covered by the kernel to kernelCover
+            #x and y can be thought of as the indices in the kernel
+            for x in range(0, width):
+                for y in range(0, height):
+                    #this try except statement accounts for when the kernel overhangs the edge of the image. Note that if it does overhang,
+                    #an IndexError will be thrown and nothing will be appended to kernelCover.
+                    try:
+                        kernelCover.append(image[i*hStep + x][j*vStep + y])
+                    except IndexError:
+                        pass
+
+            output[i][j] = max(kernelCover)
+
+    # returns output as a numpy array since other parts of the program use numpy arrays
+    return np.array(output)
 
 class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
