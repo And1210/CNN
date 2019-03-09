@@ -74,11 +74,11 @@ def maxPool(image, kernel):
 def backConvolute(img, kernal):
     output = np.zeros((img.shape[0] - kernal.shape[0] + 1,
                        img.shape[1] - kernal.shape[1] + 1))
-    for i in range(img.shape[0] - kernal.shape[0]):
-        for j in range(img.shape[1] - kernal.shape[1]):
-            for x in range(kernal.shape[0]):
-                for y in range(kernal.shape[1]):
-                    output[i][j] = output[i][j] + kernal[x][y]*img[x+i][y+j]
+    xWidth = img.shape[0] - kernal.shape[0]
+    yWidth = img.shape[1] - kernal.shape[1]
+    for i in range(xWidth):
+        for j in range(yWidth):
+            output[i][j] = output[i][j] + sum(sum(kernal*img[i:img.shape[0]-(xWidth-i),j:img.shape[1]-(yWidth-j)]))
     return output
 
 class Filter:
@@ -251,30 +251,34 @@ class CNN:
             
             
 
-#a = np.zeros((100, 100))
-#nn = CNN(a.shape, [1], 2)
-#out = nn.feedForward(a)
-#nn.train(a, np.array([[1],[0]]))
-
-nn = CNN((28, 28), [10], 10, lr=0.5)
+a = np.zeros((100, 100))
+nn = CNN(a.shape, [1], 2)
+out = nn.feedForward(a)
+print(out)
 for i in range(1000):
-    if (i % 100 == 0):
-        print(i)
-    trainData = data.trainX[i].reshape((28, 28))
-    label = np.array(correctNumbersIndex.trainY[i], ndmin=2)
-    label = label.T
-    nn.train(trainData, label)
-    
-correctNum = 0
-for i in range(500):
-    if (i % 1000 == 0):
-        print(i)
-    testData = data.testX[i].reshape((28, 28))
-    label = np.array(correctNumbersIndex.testY[i], ndmin=2)
-    label = label.T
-    out = nn.feedForward(testData)
-    if (np.argmax(out) == np.argmax(label)):
-        correctNum = correctNum + 1
-print("Result: ")
-print(correctNum)
+    nn.train(a, np.array([[1],[0]]))
+out = nn.feedForward(a)
+print(out)
+
+#nn = CNN((28, 28), [10], 10, lr=0.5)
+#for i in range(1000):
+#    if (i % 100 == 0):
+#        print(i)
+#    trainData = data.trainX[i].reshape((28, 28))
+#    label = np.array(correctNumbersIndex.trainY[i], ndmin=2)
+#    label = label.T
+#    nn.train(trainData, label)
+#    
+#correctNum = 0
+#for i in range(500):
+#    if (i % 1000 == 0):
+#        print(i)
+#    testData = data.testX[i].reshape((28, 28))
+#    label = np.array(correctNumbersIndex.testY[i], ndmin=2)
+#    label = label.T
+#    out = nn.feedForward(testData)
+#    if (np.argmax(out) == np.argmax(label)):
+#        correctNum = correctNum + 1
+#print("Result: ")
+#print(correctNum)
     
