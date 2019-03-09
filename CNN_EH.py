@@ -71,6 +71,16 @@ def maxPool(image, kernel):
     # returns output as a numpy array since other parts of the program use numpy arrays
     return np.array(output)
 
+def backConvolute(img, kernal):
+    output = np.zeros((img.shape[0] - kernal.shape[0] + 1,
+                       img.shape[1] - kernal.shape[1] + 1))
+    for i in range(img.shape[0] - kernal.shape[0]):
+        for j in range(img.shape[1] - kernal.shape[1]):
+            for x in range(kernal.shape[0]):
+                for y in range(kernal.shape[1]):
+                    output[i][j] = output[i][j] + kernal[x][y]*img[x+i][y+j]
+    return output
+
 class Filter:
     #filterSize - the size of the filter, the filter is square so it is one side length
     #***filter size must be odd***
@@ -93,26 +103,25 @@ class Filter:
 
        	#this will be the output of the function, it's the array where all the convolution sums in the below for loop will end up 
        	#instead of initializing an array of the same dimensions as b, I just copied all the indexes over. quick and dirty i know
-       	output = b[:]
+       	output = np.zeros((len(b) - self.size + 1 + floor(self.size/2) - floor(self.size/2),
+                           len(b) - self.size + 1 + floor(self.size/2) - floor(self.size/2)))
 
        	#the use of this variable will become clear later, basically it makes the convolution sum to start at one corner of the kernel
        	shift = int((self.size-1)/2)
 
        	#x and y are the indices of convolution, ie, they're the indices of the cell that the current sum being calculated will end up
-       	for x in range(floor(self.size/2), len(b) - self.size + 1 + floor(self.size/2)):
+       	for x in range(floor(self.size/2), len(b) - self.size + floor(self.size/2)):
        		#it is necessary that b is at least a rectangular matrix so that b[0] is the same length as b[q] for any index q
-       		for y in range(floor(self.size/2), len(b[0]) - self.size + 1 + floor(self.size/2)):
-       			output[x][y] = 0
-
+       		for y in range(floor(self.size/2), len(b[0]) - self.size + floor(self.size/2)):
        			#these for loops iterate over the kernel and the corresponding indices in the image
        			for i in range(0, self.size):
        				for j in range(0, self.size):
-       					try:
-       						#see how the shift variable makes the convolution sum to start at one corner of the kernel
-       						output[x][y] += a[x+shift-i][x+shift-j]*b[y+shift-i][x+shift-j]
-       					except IndexError:
-       						#if the kernel overlaps the edge of b, consider the value of b[y+shift-i][x+shift-j] to be zero
-       						output[x][y] += 0
+#       					try:
+#       						#see how the shift variable makes the convolution sum to start at one corner of the kernel
+       					output[x][y] += a[i][j]*b[y-shift-j][x-shift-i]
+#       					except IndexError:
+#       						#if the kernel overlaps the edge of b, consider the value of b[y+shift-i][x+shift-j] to be zero
+#       						output[x][y] += 0
        			#"normalizes" the output
        			output[x][y] *= normalizationConstant
 
@@ -144,7 +153,7 @@ class ConvLayer:
             #Apply activation function (ReLU)
             newImg = relu(newImg)
             #Pooling
-            newImg = maxPool(newImg, (2, 2))
+#            newImg = maxPool(newImg, (2, 2))
             output.append(newImg)
         return output
 
@@ -231,15 +240,41 @@ class CNN:
         #backpropagate through every layer
         for i in range(len(self.layers)):
             curIndex = len(self.layers)-(i+1)
-            curLayer = self.layers[curIndex]
-            costFilters = [Filter(cost.shape[1]) for i in range(cost.shape[0])]
-            for i in range(costFilters):
-                costFilters[i].values = cost[i]
+            curLayer = self.layers[i]
+            for c in range(len(cost)):
+                if isinstance(layerOutputs[curIndex], list):
+                    weightChange = backConvolute(layerOutputs[curIndex][c], cost[0])
+                else:
+                    weightChange = backConvolute(layerOutputs[curIndex], cost[0])
+                curLayer.filters[c].values = curLayer.filters[c].values + weightChange
             
             
             
 
-a = np.zeros((100, 100))
-nn = CNN(a.shape, [2, 4], 2)
-out = nn.feedForward(a)
-nn.train(a, np.array([[1],[0]]))
+#a = np.zeros((100, 100))
+#nn = CNN(a.shape, [1], 2)
+#out = nn.feedForward(a)
+#nn.train(a, np.array([[1],[0]]))
+
+nn = CNN((28, 28), [10], 10, lr=0.5)
+for i in range(1000):
+    if (i % 100 == 0):
+        print(i)
+    trainData = data.trainX[i].reshape((28, 28))
+    label = np.array(correctNumbersIndex.trainY[i], ndmin=2)
+    label = label.T
+    nn.train(trainData, label)
+    
+correctNum = 0
+for i in range(500):
+    if (i % 1000 == 0):
+        print(i)
+    testData = data.testX[i].reshape((28, 28))
+    label = np.array(correctNumbersIndex.testY[i], ndmin=2)
+    label = label.T
+    out = nn.feedForward(testData)
+    if (np.argmax(out) == np.argmax(label)):
+        correctNum = correctNum + 1
+print("Result: ")
+print(correctNum)
+    
