@@ -1,6 +1,5 @@
 import numpy as np
 import mnistdb.io as mio
-import skimage.measure
 from math import ceil as ceiling
 from math import floor
 
@@ -78,7 +77,16 @@ def backConvolute(img, kernal):
     yWidth = img.shape[1] - kernal.shape[1]
     for i in range(xWidth + 1):
         for j in range(yWidth + 1):
-            output[i][j] = output[i][j] + np.sum(kernal*img[i:img.shape[0]-(xWidth-i),j:img.shape[1]-(yWidth-j)]))
+            output[i][j] += np.sum(kernal*img[i:img.shape[0]-(xWidth-i),j:img.shape[1]-(yWidth-j)])
+    return output
+
+def inverseConvolute(img, kernal):
+    output = np.zeros((kernal.shape[0] + floor(img.shape[0]/2) + 1,
+                       kernal.shape[1] + floor(img.shape[1]/2) + 1))
+    for i in range(img.shape[0]):
+        for j in range(img.shape[1]):
+            output[i:kernal.shape[0]+i,j:kernal.shape[1]+j] += kernal
+            output[i+kernal.shape[0]-img.shape[0]:i+kernal.shape[0],j+kernal.shape[1]-img.shape[1]:j+kernal.shape[1]] += kernal[kernal.shape[0]-i-img.shape[0]:kernal.shape[0]-i,kernal.shape[1]-j-img.shape[1]:kernal.shape[1]-j]*img
     return output
 
 class Filter:
@@ -161,7 +169,7 @@ class CNN:
     def __init__(self, inputSize, hiddenLayers, outputSize, lr=0.05):
         self.lr = lr
         self.layers = []
-        self.layerOut = [None for i in range(len(hiddenLayers))]
+        self.layerOut = [None for i in range(len(hiddenLayers) + 1)]
         self.flattenOut = None
         for neurons in hiddenLayers:    #Setting up the convolutional layers
             self.layers.append(ConvLayer(neurons, 3))
@@ -219,20 +227,29 @@ class CNN:
         #backpropagate through every layer
         for i in range(len(self.layers)):
             curIndex = len(self.layers)-(i+1)
-            curLayer = self.layers[i]
+            curLayer = self.layers[curIndex]
+            if curIndex >= 1:
+                mult = floor(len(layerOutputs[curIndex+1])/len(layerOutputs[curIndex]))
+                newCost = [np.zeros(layerOutputs[curIndex][0].shape) for i in range(len(layerOutputs[curIndex]))]
+            else:
+                mult = 1
             for c in range(len(cost)):
                 if isinstance(layerOutputs[curIndex], list):
-                    weightChange = backConvolute(layerOutputs[curIndex][c], cost[c])
+                    weightChange = backConvolute(layerOutputs[curIndex][floor(c/mult)], cost[c])
                 else:
                     weightChange = backConvolute(layerOutputs[curIndex], cost[c])
                 weightChange *= self.lr
-                curLayer.filters[c].values = curLayer.filters[c].values + weightChange
+                curLayer.filters[c].values += weightChange
+                if curIndex >= 1:
+                    newCost[floor(c/mult)] += inverseConvolute(curLayer.filters[c].values, cost[c])
+            if curIndex >= 1:
+                cost = newCost
             
             
             
-
+#
 #a = np.zeros((100, 100))
-#nn = CNN(a.shape, [1], 2)
+#nn = CNN(a.shape, [1, 2], 2)
 #out = nn.feedForward(a)
 #print(out)
 #for i in range(1000):
@@ -242,7 +259,7 @@ class CNN:
 #out = nn.feedForward(a)
 #print(out)
 
-nn = CNN((28, 28), [2], 10, lr=0.01)
+nn = CNN((28, 28), [1, 1], 10, lr=0.05)
 for i in range(60000):
     if (i % 1000 == 0):
         print(i)
